@@ -124,11 +124,11 @@ int main(void) {
 	
 	//infinite loop to test sw3 interrupt
 	unsigned short a = 0;
-	while(1) {
+	//while(1) {
 		a = microphone_read();
-		delay();
+		int z = 8;
 		
-	}
+	//}
 	
 	//for loop to test servo functionality
 	/*for (int i =0; i < 5; i++) {
