@@ -34,67 +34,22 @@ void lock (void) {
 	}
 }
 
-int main(void) {
+void sensor_init (void) {
 	SIM_SCGC6 |= SIM_SCGC6_ADC0_MASK;
 	
 	ADC0_CFG1 |= ADC_CFG1_MODE(3);
 	ADC0_SC1A |= ADC_SC1_ADCH(31);
-	
-	//read	
+}
+
+unsigned short sensor_read (void) {
 	ADC0_SC1A = 12 & ADC_SC1_ADCH_MASK;
 	while(ADC0_SC2 & ADC_SC2_ADACT_MASK);
 	while(!(ADC0_SC1A & ADC_SC1_COCO_MASK));
 	
-	unsigned short a = 0;
-	a = ADC0_RA;
-	
-	if (a>10000)
-		while(1);
-	else
-		while(1);
-	
-	
-	
-	
-	
-	
+	return ADC0_RA;
+}
 
-	
-//	
-//	PORTD_PCR0 = PORT_PCR_MUX(4);
-//	
-//	FTM0_MODE |= FTM_MODE_WPDIS_MASK;
-//	
-//	FTM0_MODE &= ~1;
-//	
-//	FTM0_QDCTRL &= ~FTM_QDCTRL_QUADEN_MASK;
-//	
-//	FTM0_CNT = 0x0;
-//	FTM0_MOD = 3200;
-//	FTM0_CNTIN = 0;
-//	
-//	//counter
-//	FTM0_C0SC |= FTM_CnSC_ELSB_MASK;
-//	FTM0_C0SC &= ~FTM_CnSC_ELSA_MASK;
-//	FTM0_C0SC |= FTM_CnSC_MSB_MASK;
-//	
-//	
-//	FTM0_SC = 0;
-//	FTM0_C0V=FTM0_MOD;
-//	
-//	
-//	FTM0_SC = FTM_SC_CLKS(1);
-//	FTM0_SC |= FTM_SC_PS(111);
-//	
-//	FTM0_SC |= FTM_SC_TOIE_MASK;
-//	
-//	
-//	FTM0_C0V = 320;
-//	
-
-	
-	
-	//FTM0_C1V = 0;
+int main(void) {
 	
 	
 }
