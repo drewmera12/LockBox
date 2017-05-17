@@ -12,7 +12,7 @@ int locked;
  */
 void delay (void) {
 	int i = 1;
-	while (i<10000000) 
+	while (i<100000) 
 		i++;
 }
 
@@ -68,7 +68,7 @@ void analogue_init (void) {
 	//for alcohol sensor
 	ADC0_SC1A |= ADC_SC1_ADCH(31);
 	//for microphone
-	ADC0_SC1B |= ADC_SC1_ADCH(31);
+	//ADC0_SC1B |= ADC_SC1_ADCH(31);
 }
 
 /**
@@ -88,11 +88,11 @@ unsigned short sensor_read (void) {
  * Returns: value read from microphone
  */
 unsigned short microphone_read (void) {
-	ADC0_SC1B = 14 & ADC_SC1_ADCH_MASK;
+	ADC0_SC1A = 13 & ADC_SC1_ADCH_MASK;
 	while(ADC0_SC2 & ADC_SC2_ADACT_MASK); //wait if conversion in process
-	while(!(ADC0_SC1B & ADC_SC1_COCO_MASK)); //wait until conversion complete
+	while(!(ADC0_SC1A & ADC_SC1_COCO_MASK)); //wait until conversion complete
 	
-	return ADC0_RB;//return data result register
+	return ADC0_RA;//return data result register
 }
 
 /**
@@ -120,9 +120,15 @@ int main(void) {
 	buttonlock_setup();
 	locked = 1;
 	unlock();
+	analogue_init();
 	
 	//infinite loop to test sw3 interrupt
-	while(1) {};
+	unsigned short a = 0;
+	while(1) {
+		a = microphone_read();
+		delay();
+		
+	}
 	
 	//for loop to test servo functionality
 	/*for (int i =0; i < 5; i++) {
