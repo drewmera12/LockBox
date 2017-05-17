@@ -1,20 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fsl_device_registers.h>
+#include "utils.h"
 //#include "gpio.h"
 
 
 //1 if lock() was called last. 0 if unlock() was called last
 int locked;
-
-/**
- * Busy-wait delay function. Used in servo functions
- */
-void delay (void) {
-	int i = 1;
-	while (i<100000) 
-		i++;
-}
 
 /**
  * Initialize the servo using FTM0
@@ -113,6 +105,7 @@ void PORTA_IRQHandler(void) {
 	lock();
 	PORTA_ISFR = PORT_ISFR_ISF(0x10);
 }
+
 
 int main(void) {
 	//make sure servo correctly oriented in unlocked position before starting
