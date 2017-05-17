@@ -3,6 +3,13 @@
 #include <fsl_device_registers.h>
 //#include "gpio.h"
 
+
+//1 if lock() was called last. 0 if unlock() was called last
+int locked;
+
+/**
+ * Busy-wait delay function. Used in servo functions
+ */
 void delay (void) {
 	int i = 1;
 	while (i<10000000) 
@@ -16,26 +23,37 @@ void servo_init (void) {
 	SIM_SCGC6 |= SIM_SCGC6_FTM0_MASK;
 	SIM_SCGC5 |= SIM_SCGC5_PORTA_MASK;
 	
-	PORTA_PCR2 = PORT_PCR_MUX(3);
+	PORTA_PCR2 = PORT_PCR_MUX(3);//port a2
 	
 	FTM0_CNTIN = 0;
 	FTM0_SC |= 0x004F;
-	FTM0_MOD = 3200;
+	FTM0_MOD = 3200; //set period of ~20ms
 	
 	FTM0_C7SC |= 0x0028;
-	
-	FTM0_C7V = 160;
 }
 
 /**
- * Turns servo to certain degree corresponding to a locked box
+ * Turns servo 90 degrees corresponding to locking box
+ * Requires: locked = 0
  */
 void lock (void) {
-	while(1) {
-		delay();
+	if (!locked) {
 		FTM0_C7V = 320;
+		locked = 1;
 		delay();
+	}
+}
+
+/**
+ * Turns servo 90 degrees (opposite direction of lock())
+ * corresponding to unlocking box
+ * Requires: locked = 1
+ */
+void unlock(void) {
+	if (locked) {
 		FTM0_C7V = 160;
+		locked = 0;
+		delay();
 	}
 }
 
@@ -77,9 +95,40 @@ unsigned short microphone_read (void) {
 	return ADC0_RB;//return data result register
 }
 
+/**
+ * Setup interrupts for sw3 button press
+ */
+void buttonlock_setup(void) {
+	SIM_SCGC5 |= SIM_SCGC5_PORTA_MASK;
+	PORTA_PCR4 = 0x90100;
+	GPIOA_PDDR |= (0 << 4);
+	PORTA_ISFR = PORT_ISFR_ISF(0x10);
+	NVIC_EnableIRQ(PORTA_IRQn);	
+}
+
+/**
+ * Interrupt handler for sw3 button press. Locks the box if unlocked
+ */
+void PORTA_IRQHandler(void) {
+	lock();
+	PORTA_ISFR = PORT_ISFR_ISF(0x10);
+}
+
 int main(void) {
+	//make sure servo correctly oriented in unlocked position before starting
+	servo_init();
+	buttonlock_setup();
+	locked = 1;
+	unlock();
 	
+	//infinite loop to test sw3 interrupt
+	while(1) {};
 	
+	//for loop to test servo functionality
+	/*for (int i =0; i < 5; i++) {
+		lock();
+		unlock();		
+	}*/
 }
 
 
