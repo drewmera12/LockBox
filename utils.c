@@ -6,14 +6,16 @@
  */
 void delay (void) {
 	int i = 1;
-	while (i<100000) 
+	while (i<10000000) 
 		i++;
 }
+
+/** LED HELPER FUNCTIONS TAKEN FROM utils.c IN PRIOR LABS **/
 
 /**
  * Turn the Red LED on
  */
-void Led_RedOn() {
+void LEDRed_On() {
   SIM->SCGC5 |= SIM_SCGC5_PORTB_MASK; //Enable the clock to port B
   PORTB->PCR[22] = PORT_PCR_MUX(001); //Set up PTB18 as GPIO
   PTB->PDDR = (1 << 22);
@@ -25,7 +27,7 @@ void Led_RedOn() {
  * Turn the Red LED off
  * Requires: the Red LED is turned on
  */
-void Led_RedOff() {
+void LEDRed_Off() {
   PTB->PSOR = (1 << 22);
 	return;
 }
@@ -33,7 +35,7 @@ void Led_RedOff() {
 /**
  * Turn the Blue LED on
  */
-void Led_BlueOn() {
+void LEDBlue_On() {
   SIM->SCGC5 |= SIM_SCGC5_PORTB_MASK; //Enable the clock to port B
   PORTB->PCR[21] = PORT_PCR_MUX(001); //Set up PTB18 as GPIO
   PTB->PDDR = (1 << 21);
@@ -45,7 +47,7 @@ void Led_BlueOn() {
  * Turn the Blue LED off
  * Requires: the Blue LED is turned on
  */
-void Led_BlueOff() {
+void LEDBlue_Off() {
   PTB->PSOR = (1 << 21);
 	return;
 }
@@ -53,7 +55,7 @@ void Led_BlueOff() {
 /**
  * Turn the Green LED on
  */
-void Led_GreenOn() {
+void LEDGreen_On() {
 	SIM->SCGC5 |= SIM_SCGC5_PORTE_MASK; //Enable the clock to port B
   PORTE->PCR[26] = PORT_PCR_MUX(001); //Set up PTB18 as GPIO
   PTE->PDDR = (1 << 26);
@@ -65,7 +67,7 @@ void Led_GreenOn() {
  * Turn the Green LED off
  * Requires: the Green LED is turned on
  */
-void Led_GreenOff() {
+void LEDGreen_Off() {
 	PTE->PSOR = (1 << 26);
 	return;
 }

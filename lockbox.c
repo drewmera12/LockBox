@@ -55,12 +55,8 @@ void unlock(void) {
  */
 void analogue_init (void) {
 	SIM_SCGC6 |= SIM_SCGC6_ADC0_MASK;
-	
 	ADC0_CFG1 |= ADC_CFG1_MODE(3);
-	//for alcohol sensor
 	ADC0_SC1A |= ADC_SC1_ADCH(31);
-	//for microphone
-	//ADC0_SC1B |= ADC_SC1_ADCH(31);
 }
 
 /**
@@ -92,9 +88,10 @@ unsigned short microphone_read (void) {
  */
 void buttonlock_setup(void) {
 	SIM_SCGC5 |= SIM_SCGC5_PORTA_MASK;
-	PORTA_PCR4 = 0x90100;
+	PORTA_PCR4 = 0x90100; //sw3
 	GPIOA_PDDR |= (0 << 4);
 	PORTA_ISFR = PORT_ISFR_ISF(0x10);
+	//interrupts enabled on port A
 	NVIC_EnableIRQ(PORTA_IRQn);	
 }
 
@@ -103,10 +100,62 @@ void buttonlock_setup(void) {
  */
 void PORTA_IRQHandler(void) {
 	lock();
-	PORTA_ISFR = PORT_ISFR_ISF(0x10);
+	PORTA_ISFR = PORT_ISFR_ISF(0x10);//reset interrupt
 }
 
+/**
+ * Poll the sensor input. If input is over threshold then alcohol present and red LED
+ * toggles and box stays locked. Otherwise toggle the green LED and unlock the box.
+ * Assumes: function called from poll_microphone() in case when user assumed to be blowing
+ * into the sensor (blue LED will be on in this case).
+ */
+void poll_sensor(void) {
+	for (int i = 0; i < 500000; i++) {};
+	unsigned short a = sensor_read();
+	//if too much alcohol toggle red LED
+	if (a > 25000) {
+		LEDRed_On();
+		delay();
+		LEDRed_Off();
+	} 
+	//otherwise unlock and toggle green LED
+	else {
+		LEDBlue_Off();
+		LEDGreen_On();
+		unlock();
+		LEDGreen_Off();
+	}
+}
 
+/**
+ * Poll the microphone input. If input is over threshold twice in 1 second interval
+ * assume user blowing into module turn on blue LED to signal input was read and poll
+ * the sensor
+ */
+void poll_microphone(void) {
+	unsigned short a = 0;
+	a = microphone_read();
+	if (a > 64000) {
+		for (int i = 0; i < 500000; i++) {};
+		a = microphone_read();
+		//if someone's blowing into module turn on blue LED and poll sensor 
+		if (a > 64000) {
+			LEDBlue_On();
+			poll_sensor();
+		}
+		//otherwise not blowing into microphone, do nothing
+		else
+			LEDBlue_Off();
+	} else {
+		LEDBlue_Off();
+	}
+}
+
+/**
+ * Main entrypoint of code. Initializes the modules and ensures servo starts unlocked.
+ * Then polls the microphone for input if box is locked. Box locks if sw3 is pressed on 
+ * the board.
+ */
 int main(void) {
 	//make sure servo correctly oriented in unlocked position before starting
 	servo_init();
@@ -115,19 +164,12 @@ int main(void) {
 	unlock();
 	analogue_init();
 	
-	//infinite loop to test sw3 interrupt
-	unsigned short a = 0;
-	//while(1) {
-		a = microphone_read();
-		int z = 8;
-		
-	//}
-	
-	//for loop to test servo functionality
-	/*for (int i =0; i < 5; i++) {
-		lock();
-		unlock();		
-	}*/
+	//main execution loop
+	while(1) {
+		if (locked) {
+			poll_microphone();
+		}
+	}
 }
 
 
